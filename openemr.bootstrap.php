@@ -22,8 +22,8 @@ function oe_module_custom_add_menu_item(MenuEvent $event)
     $menuItem->requirement = 0;
     $menuItem->target = 'adm';
     $menuItem->menu_id = 'adm0';
-    $menuItem->label = xlt("Custom Menu Item");
-    $menuItem->url = "/interface/modules/custom_modules/oe-custom-module-tpl/index.php";
+    $menuItem->label = xlt("CQM Tools");
+    $menuItem->url = "/interface/modules/custom_modules/oe-cqm/index.php?action=admin";
     $menuItem->children = [];
     $menuItem->acl_req = ["admin", "super"];
 

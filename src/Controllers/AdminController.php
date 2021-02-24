@@ -6,76 +6,27 @@
  * Time: 11:00 AM
  */
 
-namespace Mi2\CustomModuleTpl\Controllers;
+namespace Mi2\Cqm\Controllers;
 
+use GuzzleHttp\Psr7\LazyOpenStream;
+use GuzzleHttp\Psr7;
 use Mi2\DataTable\SearchFilter;
 use Mi2\Framework\AbstractController;
 use Mi2\Framework\Response;
+use OpenEMR\Common\System\System;
+use OpenEMR\Cqm\CqmClient;
+use OpenEMR\Cqm\CqmServiceManager;
+use OpenEMR\Cqm\Generator;
+use OpenEMR\Services\Qdm\PatientService;
+use OpenEMR\Services\Qdm\MeasureService;
 
 class AdminController extends AbstractController
 {
+    protected $client;
+
     public function __construct()
     {
-
-    }
-
-    public function _action_patient_search()
-    {
-        $query = $this->request->getParam( 'query' );
-        if ( strpos( $query, '/' ) !== false ) {
-            $parts = explode("/", $query );
-            $year = "";
-            $month = "";
-            $day = "";
-            for ( $i = 0; $i < count($parts); $i++ ) {
-                switch ( $i ) {
-                    case 0: $month = $parts[0];
-                        break;
-                    case 1: $day = $parts[1];
-                        break;
-                    case 2: $year = $parts[2];
-                        break;
-                }
-            }
-
-            $dob = "%-$month-%";
-            if ( $day ) {
-                $dob = "%-$month-$day";
-            }
-
-            if ( $year ) {
-                $dob = "%$year-$month-$day%";
-            }
-
-            $statement = "SELECT PD.*, ( SELECT left(FE.date,10) FROM form_encounter FE WHERE PD.pid = FE.pid ORDER BY FE.date DESC LIMIT 1 ) AS last_encounter FROM patient_data PD WHERE PD.DOB LIKE ?";
-            $result = sqlStatement( $statement, array( $dob ) );
-        } else if ( strpos( $query, ',' ) !== false ) {
-            $parts = explode( ',', $query );
-            $fname = trim( $parts[1] );
-            $lname = trim( $parts[0] );
-            $statement = "SELECT PD.*, ( SELECT left(FE.date,10) FROM form_encounter FE WHERE PD.pid = FE.pid ORDER BY FE.date DESC LIMIT 1 ) AS last_encounter FROM patient_data PD WHERE PD.lname = ? AND PD.fname LIKE ?";
-            $result = sqlStatement( $statement, array( $lname, "$fname%" ) );
-        } else {
-            $lname = trim( $query );
-            $statement = "SELECT PD.*, ( SELECT left(FE.date,10) FROM form_encounter FE WHERE PD.pid = FE.pid ORDER BY FE.date DESC LIMIT 1 ) AS last_encounter FROM patient_data PD WHERE PD.lname LIKE ?";
-            $result = sqlStatement( $statement, array( "$lname%" ) );
-        }
-
-        $patients = array();
-        while ( $row = sqlFetchArray( $result ) ) {
-            $patients []= array(
-                'id' => $row['pid'],
-                'name' => $row['lname'].", ".$row['fname'],
-                'DOB' => $row['DOB'],
-                'sex' => $row['sex'],
-                'pid' => $row['pid'],
-                'lastEncounter' => $row['last_encounter'],
-                'displayKey' => $row['lname'].", ".$row['fname']." (".$row['pid']." ".$row['DOB'].") "
-            );
-        }
-
-        echo json_encode( $patients );
-        exit;
+        $this->client = CqmServiceManager::makeCqmClient();
     }
 
     /**
@@ -83,7 +34,74 @@ class AdminController extends AbstractController
      */
     public function _action_index()
     {
+        $health = json_encode($this->client->getHealth());
+
+        // For now, we're only using the measures from the 'projecttacoma/cqm-execution' node module
+        // because they have the value_sets.json we need to pass to cqm-service
+        $this->view->measures = MeasureService::fetchMeasureOptions('projecttacoma/cqm-execution');
+        $this->view->patientJson = "";
+        $this->view->health = $health;
+        $this->view->title = "CQM Tools";
         $this->setViewScript( 'admin/settings.php', 'layout.php' );
-        $this->view->title = "Messages Settings";
+    }
+
+    public function _action_get_health()
+    {
+        echo json_encode($this->client->getHealth());
+        exit;
+    }
+
+    public function _action_start_service()
+    {
+        echo $this->client->start();
+        exit;
+    }
+
+    public function _action_shutdown_service()
+    {
+        echo $this->client->shutdown();
+        exit;
+    }
+
+    public function _action_generate_models()
+    {
+        $generator = new Generator();
+        $generator->execute();
+        echo '';
+        exit;
+    }
+
+    public function _action_generate_patient()
+    {
+        $pid = $this->request->getParam('pid');
+        $patientService = new PatientService();
+        $qdmPatient = $patientService->makePatient($pid);
+        echo json_encode($qdmPatient);
+        exit;
+    }
+
+    public function _action_execute_measure()
+    {
+        $pid = $this->request->getParam('pid');
+        $measure = $this->request->getParam('measure');
+
+        $patientService = new PatientService();
+        $qdmPatient = $patientService->makePatient($pid);
+        $patients = [
+            $qdmPatient
+        ];
+        $patientStream = Psr7\Utils::streamFor(json_encode($patients));
+        $measureFiles = MeasureService::fetchMeasureFiles($measure);
+        $measureFileStream = new LazyOpenStream($measureFiles['measure'], 'r');
+        $valueSetFileStream = new LazyOpenStream($measureFiles['valueSets'], 'r');
+
+        $response = $this->client->calculate(
+            $patientStream,
+            $measureFileStream,
+            $valueSetFileStream
+        );
+
+        echo json_encode($response);
+        exit;
     }
 }
