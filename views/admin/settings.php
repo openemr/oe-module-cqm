@@ -48,6 +48,10 @@
 <script>
     $(document).ready(function () {
 
+        setInterval(function () {
+            refreshHealth();
+        }, 3000);
+
         $('.ajax-action').on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();

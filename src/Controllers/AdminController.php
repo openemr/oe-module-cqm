@@ -94,11 +94,16 @@ class AdminController extends AbstractController
         $measureFiles = MeasureService::fetchMeasureFiles($measure);
         $measureFileStream = new LazyOpenStream($measureFiles['measure'], 'r');
         $valueSetFileStream = new LazyOpenStream($measureFiles['valueSets'], 'r');
+        $options = [
+            'doPretty' => true
+        ];
+        $optionsStream = Psr7\Utils::streamFor(json_encode($options));
 
         $response = $this->client->calculate(
             $patientStream,
             $measureFileStream,
-            $valueSetFileStream
+            $valueSetFileStream,
+            $optionsStream
         );
 
         echo json_encode($response);
