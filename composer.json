@@ -1,5 +1,5 @@
 {
-    "name": "OpenEMR/oe-module-cqm",
+    "name": "sjpadgett/oe-module-cqm",
     "description": "Test CQM Services.",
     "type": "openemr-module",
     "authors": [
@@ -17,9 +17,6 @@
     },
     "autoload": {
         "psr-4": {"Mi2\\Cqm\\": "src/"}
-    },
-    "conflict": {
-        "openemr/openemr": "<6.0.0"
     },
     "minimum-stability": "dev"
 }
