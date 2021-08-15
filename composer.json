@@ -1,19 +1,25 @@
 {
-    "name": "mi-squared/oe-cqm",
+    "name": "OpenEMR/oe-module-cqm",
     "description": "Test CQM Services.",
     "type": "openemr-module",
     "authors": [
         {
             "name": "Ken Chapple",
             "email": "ken@mi-squared.com"
+        }, {
+            "name": "Jerry Padgett",
+            "email": "sjpadgett@gmail.com"
         }
     ],
     "require": {
         "mi-squared/mi-framework": "^0.1.0",
-        "mi-squared/oe-module-installer-plugin": "dev-master"
+        "openemr/oe-module-installer-plugin": "^0.1.0"
     },
     "autoload": {
         "psr-4": {"Mi2\\Cqm\\": "src/"}
+    },
+    "conflict": {
+        "openemr/openemr": "<6.0.0"
     },
     "minimum-stability": "dev"
 }
