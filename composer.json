@@ -1,5 +1,5 @@
 {
-    "name": "sjpadgett/oe-module-cqm",
+    "name": "openemr/oe-module-cqm",
     "description": "Test CQM Services.",
     "type": "openemr-module",
     "authors": [
