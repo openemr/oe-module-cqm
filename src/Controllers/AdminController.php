@@ -19,6 +19,9 @@ use OpenEMR\Cqm\CqmServiceManager;
 use OpenEMR\Cqm\Generator;
 use OpenEMR\Services\Qdm\PatientService;
 use OpenEMR\Services\Qdm\MeasureService;
+use OpenEMR\Services\Qdm\QdmBuilder;
+use OpenEMR\Services\Qdm\QdmRequestAll;
+use OpenEMR\Services\Qdm\QdmRequestOne;
 
 class AdminController extends AbstractController
 {
@@ -74,9 +77,15 @@ class AdminController extends AbstractController
     public function _action_generate_patient()
     {
         $pid = $this->request->getParam('pid');
-        $patientService = new PatientService();
-        $qdmPatient = $patientService->makePatient($pid);
-        echo json_encode($qdmPatient);
+        $request = null;
+        if ($pid) {
+            $request = new QdmRequestOne($pid);
+        } else {
+            $request = new QdmRequestAll();
+        }
+        $builder = new QdmBuilder();
+        $models = $builder->build($request);
+        echo json_encode($models);
         exit;
     }
 
@@ -84,18 +93,27 @@ class AdminController extends AbstractController
     {
         $pid = $this->request->getParam('pid');
         $measure = $this->request->getParam('measure');
+        $effectiveDate = $this->request->getParam('effectiveDate');
+        $effectiveEndDate = $this->request->getParam('effectiveEndDate');
 
-        $patientService = new PatientService();
-        $qdmPatient = $patientService->makePatient($pid);
-        $patients = [
-            $qdmPatient
-        ];
-        $patientStream = Psr7\Utils::streamFor(json_encode($patients));
+        if ($pid) {
+            $request = new QdmRequestOne($pid);
+        } else {
+            $request = new QdmRequestAll();
+        }
+        $builder = new QdmBuilder();
+        $models = $builder->build($request);
+        $json_models = json_encode($models);
+        $patientStream = Psr7\Utils::streamFor($json_models);
         $measureFiles = MeasureService::fetchMeasureFiles($measure);
         $measureFileStream = new LazyOpenStream($measureFiles['measure'], 'r');
         $valueSetFileStream = new LazyOpenStream($measureFiles['valueSets'], 'r');
         $options = [
-            'doPretty' => true
+            'doPretty' => true,
+            'includeClauseResults' => true,
+            'requestDocument' => true,
+            'effectiveDate' => $effectiveDate,
+            'effectiveDateEnd' => $effectiveEndDate
         ];
         $optionsStream = Psr7\Utils::streamFor(json_encode($options));
 

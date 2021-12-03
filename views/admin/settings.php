@@ -24,10 +24,13 @@
                                 <div class="input-group-append">
                                     <a class="ajax-action btn btn-secondary form-control" data-action="generate_patient" href="<?php echo $this->baseUrl(); ?>/index.php">Generate JSON</a>
                                 </div>
+                                <span class="text-sm-left">Leave Blank to generate ALL Patients</span>
                             </div>
                         </form>
                     </li>
                     <li class="list-group-item">
+                        <input class="form-control" type="text" id="effectiveDate" value="2018-01-01">
+                        <input class="form-control" type="text" id="effectiveEndDate" value="2020-12-31">
                         <select id="measure" class="form-control">
                             <?php foreach ($this->measures as $measure_name => $measure_file_path) { ?>
                                 <option value="<?php echo $measure_file_path; ?>"><?php echo $measure_name; ?></option>
@@ -63,7 +66,9 @@
             const data = {
                 action: 'admin!' + action,
                 pid: pid,
-                measure: measure
+                measure: measure,
+                effectiveDate: $('#effectiveDate').val(),
+                effectiveEndDate: $('#effectiveEndDate').val(),
             };
             $.get(href, data, function (response) {
                 if (action == 'generate_patient' ||
