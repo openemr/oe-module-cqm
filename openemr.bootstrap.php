@@ -20,8 +20,8 @@ function oe_module_custom_add_menu_item(MenuEvent $event)
 
     $menuItem = new stdClass();
     $menuItem->requirement = 0;
-    $menuItem->target = 'adm';
-    $menuItem->menu_id = 'adm0';
+    $menuItem->target = 'adm-cqm-tools';
+    $menuItem->menu_id = 'adm-cqm-tools0';
     $menuItem->label = xlt("CQM Tools");
     $menuItem->url = "/interface/modules/custom_modules/oe-module-cqm/index.php?action=admin";
     $menuItem->children = [];
