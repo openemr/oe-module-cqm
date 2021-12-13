@@ -95,7 +95,6 @@ class AdminController extends AbstractController
         $effectiveDate = $this->request->getParam('effectiveDate');
         $effectiveEndDate = $this->request->getParam('effectiveEndDate');
 
-        $request = null;
         if ($pid) {
             $request = new QdmRequestOne($pid);
         } else {
