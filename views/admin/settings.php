@@ -40,6 +40,9 @@
                     <li class="list-group-item">
                         <a class="ajax-action btn btn-secondary" data-action="execute_measure" href="<?php echo $this->baseUrl(); ?>/index.php">Execute Measure</a>
                     </li>
+                    <li class="list-group-item">
+                        <a class="ajax-action btn btn-secondary" data-action="execute_cat1_export" href="<?php echo $this->baseUrl(); ?>/index.php">Export Cat 1</a>
+                    </li>
                 </ul>
             </div>
             <div class="col-8">
@@ -71,8 +74,11 @@
                 effectiveEndDate: $('#effectiveEndDate').val(),
             };
             $.get(href, data, function (response) {
-                if (action == 'generate_patient' ||
-                    action == 'execute_measure') {
+                if (
+                    action == 'generate_patient' ||
+                    action == 'execute_measure' ||
+                    action == 'execute_cat1_export'
+                ) {
                     var textedJson = JSON.stringify(response, undefined, 4);
                     $('#sample-json').text(textedJson);
                 }
