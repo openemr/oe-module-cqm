@@ -21,6 +21,7 @@ use OpenEMR\Services\Qdm\MeasureService;
 use OpenEMR\Services\Qdm\QdmBuilder;
 use OpenEMR\Services\Qdm\QdmRequestAll;
 use OpenEMR\Services\Qdm\QdmRequestOne;
+use OpenEMR\Services\Qrda\ExportService;
 
 class AdminController extends AbstractController
 {
@@ -124,6 +125,19 @@ class AdminController extends AbstractController
         );
 
         echo json_encode($response);
+        exit;
+    }
+
+    public function _action_execute_cat1_export()
+    {
+        $pid = $this->request->getParam('pid');
+        $export = new ExportService(
+            new QdmBuilder(),
+            new QdmRequestOne($pid)
+        );
+        $xml = $export->export();
+        header('Content-type: text/xml');
+        echo $xml;
         exit;
     }
 }
