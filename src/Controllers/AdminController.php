@@ -1,5 +1,13 @@
 <?php
 /**
+ * @package OpenEMR
+ * @link      http://www.open-emr.org
+ * @author    Ken Chapple <ken@mi-squared.com>
+ * @copyright Copyright (c) 2021 Ken Chapple <ken@mi-squared.com>
+ * @license   https://github.com/openemr/openemr/blob/master/LICENSE GNU GeneralPublic License 3
+ */
+
+/**
  * Created by PhpStorm.
  * User: kchapple
  * Date: 7/29/19
@@ -26,7 +34,6 @@ use OpenEMR\Services\Qrda\ExportService;
 class AdminController extends AbstractController
 {
     protected $client;
-
     public function __construct()
     {
         $this->client = CqmServiceManager::makeCqmClient();
@@ -38,14 +45,13 @@ class AdminController extends AbstractController
     public function _action_index()
     {
         $health = json_encode($this->client->getHealth());
-
-        // Fetch the measures from the 'openemr/cqm-execution' node module
+// Fetch the measures from the 'openemr/cqm-execution' node module
         // because they have the JSON measures and value_sets.json we need to pass to cqm-service
         $this->view->measures = MeasureService::fetchMeasureOptions();
         $this->view->patientJson = "";
         $this->view->health = $health;
         $this->view->title = "CQM Tools";
-        $this->setViewScript( 'admin/settings.php', 'layout.php' );
+        $this->setViewScript('admin/settings.php', 'layout.php');
     }
 
     public function _action_get_health()
@@ -95,7 +101,6 @@ class AdminController extends AbstractController
         $measure = $this->request->getParam('measure');
         $effectiveDate = $this->request->getParam('effectiveDate');
         $effectiveEndDate = $this->request->getParam('effectiveEndDate');
-
         if ($pid) {
             $request = new QdmRequestOne($pid);
         } else {
@@ -116,14 +121,7 @@ class AdminController extends AbstractController
             'effectiveDateEnd' => $effectiveEndDate
         ];
         $optionsStream = Psr7\Utils::streamFor(json_encode($options));
-
-        $response = $this->client->calculate(
-            $patientStream,
-            $measureFileStream,
-            $valueSetFileStream,
-            $optionsStream
-        );
-
+        $response = $this->client->calculate($patientStream, $measureFileStream, $valueSetFileStream, $optionsStream);
         echo json_encode($response);
         exit;
     }
@@ -131,13 +129,12 @@ class AdminController extends AbstractController
     public function _action_execute_cat1_export()
     {
         $pid = $this->request->getParam('pid');
-        $export = new ExportService(
-            new QdmBuilder(),
-            new QdmRequestOne($pid)
-        );
+        $export = new ExportService(new QdmBuilder(), new QdmRequestOne($pid));
         $xml = $export->export();
-        header('Content-type: text/xml');
-        echo $xml;
+        file_put_contents("../../../../catI_doc.xml", $xml);
+// debug doc is in root
+        header('Content-type: text/json');
+        echo json_encode($xml);
         exit;
     }
 }
