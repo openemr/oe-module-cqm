@@ -129,10 +129,14 @@ class AdminController extends AbstractController
     public function _action_execute_cat1_export()
     {
         $pid = $this->request->getParam('pid');
+        $measure = $this->request->getParam('measure');
         $export = new ExportService(new QdmBuilder(), new QdmRequestOne($pid));
-        $xml = $export->export();
-        file_put_contents("../../../../catI_doc.xml", $xml);
-// debug doc is in root
+        $xml = $export->export(MeasureService::fetchAllMeasuresArray(
+            [$measure] // Only one using the tool, but could be multiple, so we pass in an array
+        ));
+        $directory = $GLOBALS['OE_SITE_DIR'] . DIRECTORY_SEPARATOR .
+            'documents' . DIRECTORY_SEPARATOR . 'temp';
+        file_put_contents($directory . DIRECTORY_SEPARATOR . "catI_doc.xml", $xml);
         header('Content-type: text/json');
         echo json_encode($xml);
         exit;
