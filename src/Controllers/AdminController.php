@@ -25,11 +25,13 @@ use OpenEMR\Common\System\System;
 use OpenEMR\Cqm\CqmClient;
 use OpenEMR\Cqm\CqmServiceManager;
 use OpenEMR\Cqm\Generator;
+use OpenEMR\Services\Qdm\CqmCalculator;
 use OpenEMR\Services\Qdm\MeasureService;
 use OpenEMR\Services\Qdm\QdmBuilder;
 use OpenEMR\Services\Qdm\QdmRequestAll;
 use OpenEMR\Services\Qdm\QdmRequestOne;
-use OpenEMR\Services\Qrda\ExportService;
+use OpenEMR\Services\Qrda\ExportCat1Service;
+use OpenEMR\Services\Qrda\ExportCat3Service;
 
 class AdminController extends AbstractController
 {
@@ -130,13 +132,29 @@ class AdminController extends AbstractController
     {
         $pid = $this->request->getParam('pid');
         $measure = $this->request->getParam('measure');
-        $export = new ExportService(new QdmBuilder(), new QdmRequestOne($pid));
-        $xml = $export->export(MeasureService::fetchAllMeasuresArray(
+        $export = new ExportCat1Service(new QdmBuilder(), new QdmRequestOne($pid));
+        $xml = $export->export(
             [$measure] // Only one using the tool, but could be multiple, so we pass in an array
-        ));
+        );
         $directory = $GLOBALS['OE_SITE_DIR'] . DIRECTORY_SEPARATOR .
             'documents' . DIRECTORY_SEPARATOR . 'temp';
-        file_put_contents($directory . DIRECTORY_SEPARATOR . "catI_doc.xml", $xml);
+        file_put_contents($directory . DIRECTORY_SEPARATOR . "catI_doc_$pid.xml", $xml);
+        header('Content-type: text/json');
+        echo json_encode($xml);
+        exit;
+    }
+
+    public function _action_execute_cat3_export()
+    {
+        $pid = $this->request->getParam('pid');
+        $measure = $this->request->getParam('measure');
+        $effectiveDate = $this->request->getParam('effectiveDate');
+        $effectiveEndDate = $this->request->getParam('effectiveEndDate');
+        $export = new ExportCat3Service(new CqmCalculator(new QdmBuilder()), new QdmRequestOne($pid));
+        $xml = $export->export([$measure], $effectiveDate, $effectiveEndDate);
+        $directory = $GLOBALS['OE_SITE_DIR'] . DIRECTORY_SEPARATOR .
+            'documents' . DIRECTORY_SEPARATOR . 'temp';
+        file_put_contents($directory . DIRECTORY_SEPARATOR . "catIII_doc_$pid.xml", $xml);
         header('Content-type: text/json');
         echo json_encode($xml);
         exit;
