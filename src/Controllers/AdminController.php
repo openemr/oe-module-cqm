@@ -151,7 +151,7 @@ class AdminController extends AbstractController
         $effectiveDate = $this->request->getParam('effectiveDate');
         $effectiveEndDate = $this->request->getParam('effectiveEndDate');
         $export = new ExportCat3Service(new QdmBuilder(), new CqmCalculator(), new QdmRequestOne($pid));
-        $xml = $export->export([$measure], $effectiveDate, $effectiveEndDate);
+        $xml = $export->export([$measure]);
         $directory = $GLOBALS['OE_SITE_DIR'] . DIRECTORY_SEPARATOR .
             'documents' . DIRECTORY_SEPARATOR . 'temp';
         file_put_contents($directory . DIRECTORY_SEPARATOR . "catIII_doc_$pid.xml", $xml);
